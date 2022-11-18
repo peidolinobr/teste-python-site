@@ -7,4 +7,4 @@ def homepage():
     return "asfasfasf"
 
 
-app.run()
+app.run(debug=True)
