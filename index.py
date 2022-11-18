@@ -14,7 +14,7 @@ class listaProdutos():
     produtos = []
     precos = []
     imagens = []
-    def coletar(produtos,precos,imagens):
+    def coletar():
         produtos = []
         precos = []
         imagens = []
@@ -48,8 +48,10 @@ class listaProdutos():
                 precos.append(preco)
                 imagens.append(unidade[2][contador])
                 contador+=1
-    
-    coletar(produtos, precos, imagens)
+        listaProdutos.produtos=produtos
+        listaProdutos.precos=precos
+        listaProdutos.imagens=imagens
+    coletar()
     
 def gerarProdutos(itens, valores, fotos):
     produtosHTML = ""
@@ -100,7 +102,7 @@ def homepage():
     
     if datetime.datetime.now().hour > tempo.ultimo or datetime.datetime.now().hour < tempo.ultimo:
         tempo.ultimo=datetime.datetime.now().hour
-        listaProdutos.coletar(listaProdutos.produtos, listaProdutos.precos, listaProdutos.imagens)
+        listaProdutos.coletar()
         
         produtos = gerarProdutos(
             itens=listaProdutos.produtos,
