@@ -1,52 +1,56 @@
 from flask import Flask, render_template
 import scraping
 import dados
+import datetime
 #print(os.path())
 
 
 app = Flask(__name__)
 
+class tempo():
+    ultimo = -1
+
 class listaProdutos():
     produtos = []
     precos = []
     imagens = []
-    itensSeguranca = scraping.consultar("https://www.portaldascameras.com/seguranca")
-    itensAlarmeECercas = scraping.consultar("https://www.portaldascameras.com/alarme-e-cerca")
-    itensControleDeAcesso = scraping.consultar("https://www.portaldascameras.com/controle-de-acesso")
-    itensTelefoniaEInterfonia = scraping.consultar("https://www.portaldascameras.com/telefonia-e-interfonia")
-    itensEletronicos = scraping.consultar("https://www.portaldascameras.com/eletronicos")
-    itenInformatica = scraping.consultar("https://www.portaldascameras.com/informatica")
-    unidos = [
-        itensSeguranca,
-        itensAlarmeECercas,
-        itensControleDeAcesso,
-        itensTelefoniaEInterfonia,
-        itensEletronicos,
-        itenInformatica
-    ]
-    for unidade in unidos:
-        contador = 0
-        porcentagem = 20
-        while (contador < len(unidade[0])):
-            produtos.append(unidade[0][contador])
-            #print(unidade[1][contador])
-            preco=unidade[1][contador].replace('por R$ ','')
-            preco=preco.replace('  á vista','')
-            #print(preco)
-            preco=preco.replace('.','')
-            preco=preco.replace(',','.')
-            preco=float(preco)
-            preco = (preco*(100+porcentagem)/100)
-            preco=str(f'{preco:.2f}')
-            preco = 'R$ '+preco.replace('.',',')
-            #print(preco)
-            #precos.append(unidade[1][contador])
-            precos.append(preco)
-            imagens.append(unidade[2][contador])
-            contador+=1
-                
-                
-
+    def coletar(produtos,precos,imagens):
+        produtos = []
+        precos = []
+        imagens = []
+        itensSeguranca = scraping.consultar("https://www.portaldascameras.com/seguranca")
+        itensAlarmeECercas = scraping.consultar("https://www.portaldascameras.com/alarme-e-cerca")
+        itensControleDeAcesso = scraping.consultar("https://www.portaldascameras.com/controle-de-acesso")
+        itensTelefoniaEInterfonia = scraping.consultar("https://www.portaldascameras.com/telefonia-e-interfonia")
+        itensEletronicos = scraping.consultar("https://www.portaldascameras.com/eletronicos")
+        itenInformatica = scraping.consultar("https://www.portaldascameras.com/informatica")
+        unidos = [
+            itensSeguranca,
+            itensAlarmeECercas,
+            itensControleDeAcesso,
+            itensTelefoniaEInterfonia,
+            itensEletronicos,
+            itenInformatica
+        ]
+        for unidade in unidos:
+            contador = 0
+            porcentagem = 20
+            while (contador < len(unidade[0])):
+                produtos.append(unidade[0][contador])
+                preco=unidade[1][contador].replace('por R$ ','')
+                preco=preco.replace('  á vista','')
+                preco=preco.replace('.','')
+                preco=preco.replace(',','.')
+                preco=float(preco)
+                preco = (preco*(100+porcentagem)/100)
+                preco=str(f'{preco:.2f}')
+                preco = 'R$ '+preco.replace('.',',')
+                precos.append(preco)
+                imagens.append(unidade[2][contador])
+                contador+=1
+    
+    coletar(produtos, precos, imagens)
+    
 def gerarProdutos(itens, valores, fotos):
     produtosHTML = ""
     contador = 0
@@ -93,10 +97,21 @@ def homepage():
         "telefonia-e-interfonia",
         "eletronicos",
         "informatica"]
-    produtos = gerarProdutos(
-        itens=listaProdutos.produtos,
-        valores=listaProdutos.precos,
-        fotos=listaProdutos.imagens)
+    
+    if datetime.datetime.now().hour > tempo.ultimo or datetime.datetime.now().hour < tempo.ultimo:
+        tempo.ultimo=datetime.datetime.now().hour
+        listaProdutos.coletar(listaProdutos.produtos, listaProdutos.precos, listaProdutos.imagens)
+        
+        produtos = gerarProdutos(
+            itens=listaProdutos.produtos,
+            valores=listaProdutos.precos,
+            fotos=listaProdutos.imagens)
+        
+    else:
+        produtos = gerarProdutos(
+            itens=listaProdutos.produtos,
+            valores=listaProdutos.precos,
+            fotos=listaProdutos.imagens)
     return render_template("inicio.html", produtos=produtos, filtros=filtros)
 
 @app.route("/filtro/<filtrado>")
